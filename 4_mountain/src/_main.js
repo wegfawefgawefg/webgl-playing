@@ -1,7 +1,9 @@
+var TWO_PI = Math.PI * 2;
+
 function main(vertexShaderSource, fragmentShaderSource)
 {
     let [CANVAS_WIDTH, CANVAS_HEIGHT] = [160, 144];
-    let RES_SCALE = 4;
+    let RES_SCALE = 8;
     CANVAS_WIDTH *= RES_SCALE;
     CANVAS_HEIGHT *= RES_SCALE;
 
@@ -77,7 +79,6 @@ function main(vertexShaderSource, fragmentShaderSource)
 
     attr_locs = {
         "pos": gl.getAttribLocation(program, "a_pos"),
-        "col": gl.getAttribLocation(program, "a_col"),
     }
 
     gl.enableVertexAttribArray(attr_locs.pos);
@@ -91,29 +92,29 @@ function main(vertexShaderSource, fragmentShaderSource)
         offset=0// start at the beginning of the buffer
     );
 
-    gl.enableVertexAttribArray(attr_locs.col);
-    gl.bindBuffer(gl.ARRAY_BUFFER, cols);
-    gl.vertexAttribPointer(
-        attr_locs.col,
-        size=3,// 3 components per iteration
-        type=gl.FLOAT,
-        normalize=false,
-        stride=0,// 0 = move forward size * sizeof(type) each iteration to get the next position
-        offset=0// start at the beginning of the buffer
-    );
-
     ////////////////////////////////////////////////
     ////    END BOILERPLATE LAND  2             ////
     ////////////////////////////////////////////////
+    // get mouse position from canvas using callback
+    var mouse_pos = [0, 0];
+    canvas.addEventListener("mousemove", function(event) {
+        mouse_pos = [event.clientX, event.clientY];
+    });
+
     function draw()
     {
+        let m = {
+            x: mouse_pos[0] / CANVAS_WIDTH,
+            y: mouse_pos[1] / CANVAS_HEIGHT,
+        };
+
         let dims = [CANVAS_WIDTH, CANVAS_HEIGHT];
         var dims_loc = gl.getUniformLocation(program, "dims");
         gl.uniform2fv(dims_loc, dims);
 
         let time = (new Date()).valueOf();
         var sec_freq = time / 1000.0;
-        gl.uniform1f(gl.getUniformLocation(program, "iTime"), sec_freq % 1.0);
+        gl.uniform1f(gl.getUniformLocation(program, "t"), sec_freq % 1000.0);
 
         let freq = sec_freq * 0.3;
 
@@ -124,7 +125,8 @@ function main(vertexShaderSource, fragmentShaderSource)
         gl.uniform3fv(scale_loc, scale);
 
         var angle = freq % 1.0;
-        angle = [0.35, 0.1, 0.9];
+        angle = [0.35, 0.0, 0.0];
+        //console.log(m);
         //var angle = 0;
         var angle_loc = gl.getUniformLocation(program, "rot");
         gl.uniform3fv(angle_loc, angle);
@@ -139,17 +141,18 @@ function main(vertexShaderSource, fragmentShaderSource)
 
         // try to fix the OoR bug
         let num_points = verts.length / 3;
-        let index = time % num_points;
-        let num = 20;
-        if( (index + num) >= num_points)
-        {
-            num = 0;
-        }
+        //let index = time % num_points;
+        //let num = 20;
+        //if( (index + num) >= num_points)
+        //{
+        //    num = 0;
+        //}
         
         //console.log(index);
         //gl.drawArrays(gl.LINE_STRIP, offset=time%num_points - (3*50), count=time%num_points);
+        gl.drawArrays(gl.LINE_STRIP, offset=0, count=num_points);
         //gl.drawArrays(gl.POINTS, offset=0, count=num_points);
-        gl.drawArrays(gl.POINTS, offset=index, count=num);
+        //gl.drawArrays(gl.POINTS, offset=index, count=num);
     }
     setInterval(draw, 1);
 }
