@@ -30,12 +30,14 @@ function main(vertexShaderSource, fragmentShaderSource)
 
     //  draw rect
     var verts = [0, 0, 0, 1.0, 1.0, 0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0];
-    let num_tris = verts.length / 6;
+    let num_tris = verts.length / (2 * 3);
 
+    // creating and filling a buffer with the verticies
     var pos = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pos);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
 
+    // exposing the verticies to the shader
     var pos_attrloc = gl.getAttribLocation(program, "a_pos");
     gl.enableVertexAttribArray(pos_attrloc);
     gl.bindBuffer(gl.ARRAY_BUFFER, pos);
@@ -76,8 +78,8 @@ function main(vertexShaderSource, fragmentShaderSource)
         var pos_loc = gl.getUniformLocation(program, "pos");
         gl.uniform2fv(pos_loc, pos);
 
-        gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        //gl.clearColor(0, 0, 0, 0);
+        //gl.clear(gl.COLOR_BUFFER_BIT);
 
         var num_verts = 3 * num_tris;
         gl.drawArrays(gl.TRIANGLES, offset=0, count=num_verts);

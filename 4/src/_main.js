@@ -1,7 +1,11 @@
 function main(vertexShaderSource, fragmentShaderSource)
 {
-    let CANVAS_WIDTH = 160;
-    let CANVAS_HEIGHT = 144;
+    let [CANVAS_WIDTH, CANVAS_HEIGHT] = [160, 144];
+    let RES_SCALE = 4;
+    CANVAS_WIDTH *= RES_SCALE;
+    CANVAS_HEIGHT *= RES_SCALE;
+
+    
     var canvas = document.querySelector("#c");
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
@@ -16,8 +20,10 @@ function main(vertexShaderSource, fragmentShaderSource)
     //}
     //setpixelated(gl);
     if (!gl){return;}
-    var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     var fragmentShader = createShader(gl,gl.FRAGMENT_SHADER,fragmentShaderSource);
+    console.log("fragment shader succesfully created");
+    var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    console.log("vertex shader succesfully created");
     var program = createProgram(gl, vertexShader, fragmentShader);
     //webglUtils.resizeCanvasToDisplaySize(gl.canvas);
 
@@ -28,9 +34,23 @@ function main(vertexShaderSource, fragmentShaderSource)
     ////    END BOILERPLATE LAND                ////
     ////////////////////////////////////////////////
 
-    //  draw rect
-    var verts = [0, 0, 0, 1.0, 1.0, 0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0];
-    let num_tris = verts.length / 6;
+    //  make it a grid of tris
+    var verts = [];
+    let density = 50;
+    for(let yii = 0; yii < density; yii++)
+    {
+        for(let xii = 0; xii < density; xii++)
+        {
+            let x = xii / density - 0.5;
+            let y = yii / density - 0.5;
+            //let x = xii - density / 2;
+            //let y = yii - density / 2;
+            // z is random
+            //let z = x * x + y * y;
+            let z = 0.0;
+            verts = verts.concat([x, y, z]);
+        }
+    }
 
     var pos = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pos);
@@ -40,7 +60,7 @@ function main(vertexShaderSource, fragmentShaderSource)
     gl.enableVertexAttribArray(pos_attrloc);
     gl.bindBuffer(gl.ARRAY_BUFFER, pos);
     gl.vertexAttribPointer(pos_attrloc,
-        size=2,// 2 components per iteration
+        size=3,// 2 components per iteration
         type=gl.FLOAT,
         normalize=false,
         stride=0,// 0 = move forward size * sizeof(type) each iteration to get the next position
@@ -56,39 +76,40 @@ function main(vertexShaderSource, fragmentShaderSource)
         var dims_loc = gl.getUniformLocation(program, "dims");
         gl.uniform2fv(dims_loc, dims);
 
-        let time = new Date().valueOf();
+        let time = (new Date()).valueOf();
         var sec_freq = time / 1000.0;
-        let freq = sec_freq * 6.0;
-        var angle = freq % 360;
-        //var angle = 0;
-        var angle_loc = gl.getUniformLocation(program, "angle");
-        gl.uniform1f(angle_loc, angle);
+        let freq = sec_freq * 0.3;
 
         var scale = 0.1 + (Math.cos(sec_freq*6)/2.0+0.5)*0.3;
-        //var scale = 5.0;
-        var scale_loc = gl.getUniformLocation(program, "scale");
-        gl.uniform1f(scale_loc, scale);
+        var scale = 0.7;
+        scale = [scale, scale, scale];
+        var scale_loc = gl.getUniformLocation(program, "sca");
+        gl.uniform3fv(scale_loc, scale);
 
-        var pos = [
-            0.5 + Math.sin(sec_freq) / 2.0, 
-            0.5 + Math.cos(sec_freq) / 2.0
-        ]
+        var angle = freq % 1.0;
+        angle = [angle, angle, 0];
+        //var angle = 0;
+        var angle_loc = gl.getUniformLocation(program, "rot");
+        gl.uniform3fv(angle_loc, angle);
+
+        var pos = [0.0, 0.0, 0.1 + (Math.cos(sec_freq*6)/2.0+0.5)*0.9];
         var pos_loc = gl.getUniformLocation(program, "pos");
-        gl.uniform2fv(pos_loc, pos);
+        gl.uniform3fv(pos_loc, pos);
 
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        var num_verts = 3 * num_tris;
-        gl.drawArrays(gl.TRIANGLES, offset=0, count=num_verts);
+        let num_points = verts.length / 3;
+        gl.drawArrays(gl.POINTS, offset=0, count=num_points);
+        //gl.drawArrays(gl.LINE_STRIP, offset=0, count=num_points);
     }
     setInterval(draw, 1);
 }
 
 async function load_shaders()
 {
-    var vertexShaderSource = await get_file("../src/_vert-shader-2d.glsl");
-    var fragmentShaderSource = await get_file("../src/_frag-shader-2d.glsl");
+    var vertexShaderSource = await get_file("../src/_vert-shader.glsl");
+    var fragmentShaderSource = await get_file("../src/_frag-shader.glsl");
     //var fragmentShaderSource = await get_file("./frag-shader-sea.glsl");
     main(vertexShaderSource, fragmentShaderSource);
 }
