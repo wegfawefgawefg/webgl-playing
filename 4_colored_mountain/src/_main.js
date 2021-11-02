@@ -137,12 +137,19 @@ function main(vertexShaderSource, fragmentShaderSource)
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        // try to fix the OoR bug
         let num_points = verts.length / 3;
         let index = time % num_points;
+        let num = 20;
+        if( (index + num) >= num_points)
+        {
+            num = 0;
+        }
+        
         //console.log(index);
         //gl.drawArrays(gl.LINE_STRIP, offset=time%num_points - (3*50), count=time%num_points);
         //gl.drawArrays(gl.POINTS, offset=0, count=num_points);
-        gl.drawArrays(gl.POINTS, offset=index, count=num_points/10);
+        gl.drawArrays(gl.POINTS, offset=index, count=num);
     }
     setInterval(draw, 1);
 }
